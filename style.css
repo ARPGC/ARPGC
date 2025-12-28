@@ -19,10 +19,11 @@ html, body {
     --bronze: #CD7F32;
     --forest-accent: #1e8f4b;
     
-    /* Christmas Tokens */
-    --holiday-red: #ef4444;
-    --holiday-green: #10b981;
-    --snow-color: rgba(255, 255, 255, 0.8);
+    /* New Year 2026 Theme Colors */
+    --ny-midnight: #0f172a;
+    --ny-purple: #3b0764;
+    --ny-accent: #818cf8;
+    --ny-gold: #fbbf24;
 }
 
 *, *::before, *::after {
@@ -32,6 +33,19 @@ html, body {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
+}
+
+/* --- LOADER FIX (Forces removal) --- */
+#app-loading { 
+    transition: opacity 0.5s ease-out, visibility 0.5s; 
+    opacity: 1; 
+    visibility: visible; 
+    z-index: 9999;
+}
+#app-loading.loaded { 
+    opacity: 0 !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
 }
 
 /* --- RESPONSIVE LAYOUT CONTAINER --- */
@@ -113,21 +127,9 @@ header, nav {
     animation: pulse-points 0.4s ease-out;
 }
 
-/* --- CHRISTMAS SNOW ANIMATIONS (Hardware Accelerated) --- */
-@keyframes snow-fall {
-    0% { transform: translateY(-10vh); }
-    100% { transform: translateY(110vh); }
-}
-
-@keyframes hat-bounce {
-    0%, 100% { transform: rotate(15deg); }
-    50% { transform: rotate(5deg) translateY(-2px); }
-}
-
 /* --- LOW DATA / REDUCED MOTION --- */
-/* Disabled via JS util isLowDataMode() or system preference */
 @media (prefers-reduced-motion: reduce) {
-    .leaf, .animate-float, .app-loader-logo, .points-pulse, .page, .snow-layer {
+    .leaf, .animate-float, .app-loader-logo, .points-pulse, .page, .hero-particle {
         animation: none !important;
         transition: none !important;
     }
@@ -135,8 +137,8 @@ header, nav {
 
 body.low-data-mode .leaf,
 body.low-data-mode .animate-float,
-body.low-data-mode .snow-layer {
-    display: none !important; /* Completely hide heavy particles */
+body.low-data-mode .hero-particle {
+    display: none !important; /* Hide heavy visuals */
 }
 
 /* =========================================
@@ -150,7 +152,6 @@ body.low-data-mode .snow-layer {
     z-index: 50;
     width: 280px; /* Fixed width */
     height: 100%;
-    /* Ensure sidebar stays on top and has background */
     z-index: 50; 
 }
 #sidebar::-webkit-scrollbar { display: none; }
@@ -229,7 +230,6 @@ body.low-data-mode .snow-layer {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(148, 163, 184, 0.40);
-    /* Winter Frost Tweak */
     position: relative;
     overflow: hidden;
 }
@@ -270,9 +270,67 @@ body.low-data-mode .snow-layer {
 }
 
 /* =========================================
-   5. RESPONSIVE GRIDS (Product, Events, etc.)
+   5. NEW YEAR HERO BANNER (PREMIUM UI)
    ========================================= */
-/* Product Grid Override */
+.glass-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
+    /* Deep Midnight to Purple Gradient */
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    box-shadow: 0 20px 40px -10px rgba(49, 46, 129, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Shimmer Text Animation */
+.text-shimmer {
+    background: linear-gradient(to right, #818cf8 0%, #c7d2fe 50%, #818cf8 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shine 4s linear infinite;
+}
+@keyframes shine { 
+    to { background-position: 200% center; } 
+}
+
+/* Floating Particles in Banner */
+.hero-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: floatParticle 8s infinite ease-in-out;
+}
+@keyframes floatParticle {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+    50% { transform: translateY(-20px) scale(1.2); opacity: 0.6; }
+}
+
+/* Hero Timer Box Styling */
+.hero-timer-box {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Confetti Canvas */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100; /* Above content */
+}
+
+/* =========================================
+   6. RESPONSIVE GRIDS (Product, Events, etc.)
+   ========================================= */
 @media (min-width: 768px) {
     #product-grid, #store-detail-page .grid {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -301,7 +359,7 @@ body.low-data-mode .snow-layer {
 }
 
 /* =========================================
-   6. LEADERBOARD DESIGN
+   7. LEADERBOARD DESIGN
    ========================================= */
 .leaf-layer {
     position: absolute;
@@ -331,16 +389,6 @@ body.low-data-mode .snow-layer {
     10% { opacity: 0.8; } 
     100% { transform: translateY(120vh) translateX(40px) rotate(180deg); opacity: 0; }
 }
-
-/* Leaf timings */
-.leaf:nth-child(1) { left: 5%;  animation-duration: 13s; animation-delay: 0s; }
-.leaf:nth-child(2) { left: 18%; animation-duration: 11s; animation-delay: 2s; }
-.leaf:nth-child(3) { left: 32%; animation-duration: 15s; animation-delay: 1s; }
-.leaf:nth-child(4) { left: 46%; animation-duration: 12s; animation-delay: 3s; }
-.leaf:nth-child(5) { left: 60%; animation-duration: 16s; animation-delay: .5s; }
-.leaf:nth-child(6) { left: 72%; animation-duration: 14s; animation-delay: 4s; }
-.leaf:nth-child(7) { left: 84%; animation-duration: 13s; animation-delay: 1.5s;}
-.leaf:nth-child(8) { left: 92%; animation-duration: 17s; animation-delay: 2.5s;}
 
 .podium-wrapper {
     position: relative;
@@ -473,7 +521,7 @@ body.low-data-mode .snow-layer {
 .dark .item.is-me { background: #064e3b; border-color: #34d399; }
 
 /* =========================================
-   7. MODALS, UTILITIES & CHATBOT DESKTOP
+   8. MODALS, UTILITIES & CHATBOT DESKTOP
    ========================================= */
 .checkin-completed {
     background: #F3F4F6 !important;
@@ -534,10 +582,6 @@ body.low-data-mode .snow-layer {
         visibility: visible;
     }
 }
-
-/* Loader */
-#app-loading { opacity: 1; visibility: visible; transition: opacity 0.5s ease-out; }
-#app-loading.loaded { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* Custom Form & Tabs */
 .custom-select {
@@ -660,7 +704,7 @@ body.low-data-mode .snow-layer {
 }
 
 /* =========================================
-   8. TOAST NOTIFICATIONS (Mobile Optimized)
+   9. TOAST NOTIFICATIONS (Mobile Optimized)
    ========================================= */
 #app-toast {
     position: fixed;
@@ -714,83 +758,10 @@ body.low-data-mode .snow-layer {
     opacity: 0 !important;
 }
 
-/* =========================================
-   9. CHRISTMAS THEME & DECORATIONS
-   ========================================= */
-
-/* High-Performance CSS Snow Layer (Multiple box-shadow layers) */
-/* Requires empty div with class .snow-layer in HTML */
-.snow-container {
-    position: fixed;
-    width: 100%;
-    height: 100vh;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 5; /* Above background, below interactive content */
-    overflow: hidden;
-}
-
-.snow-layer {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: -100%;
-    left: 0;
-    opacity: 0.7;
-    animation: snow-fall linear infinite;
-}
-
-/* Creating snow using gradients/shadows to minimize DOM elements */
-/* These mimic particles */
-.snow-layer-1 {
-    background-image: radial-gradient(3px 3px at 20% 30%, var(--snow-color) 50%, transparent),
-                      radial-gradient(3px 3px at 40% 70%, var(--snow-color) 50%, transparent),
-                      radial-gradient(3px 3px at 60% 40%, var(--snow-color) 50%, transparent),
-                      radial-gradient(3px 3px at 80% 80%, var(--snow-color) 50%, transparent);
-    background-size: 50% 50%;
-    animation-duration: 15s;
-}
-
-.snow-layer-2 {
-    background-image: radial-gradient(4px 4px at 10% 50%, var(--snow-color) 50%, transparent),
-                      radial-gradient(4px 4px at 30% 20%, var(--snow-color) 50%, transparent),
-                      radial-gradient(4px 4px at 70% 60%, var(--snow-color) 50%, transparent),
-                      radial-gradient(4px 4px at 90% 10%, var(--snow-color) 50%, transparent);
-    background-size: 60% 60%;
-    animation-duration: 10s;
-    opacity: 0.5;
-}
-
-/* Santa Hat Helper */
-.santa-hat-overlay {
-    position: relative;
-    display: inline-block;
-}
-.santa-hat-overlay::after {
-    content: '🎅';
-    position: absolute;
-    top: -15px;
-    right: -10px;
-    font-size: 1.8rem;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-    animation: hat-bounce 3s infinite ease-in-out;
-    z-index: 10;
-    pointer-events: none;
-}
-
-/* Festive Gradients for Buttons */
-.btn-christmas {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;
-}
-
-/* Festive Card Highlight */
-.glass-card.festive {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-}
-.dark .glass-card.festive {
-    border: 1px solid rgba(255, 255, 255, 0.15);
+/* --- FIX: Keep Happy New Year card fully static --- */
+.new-year-fixed,
+.new-year-fixed * {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
 }
