@@ -1,13 +1,13 @@
 /**
  * EcoCampus - Main Application Logic (app.js)
- * Fully updated with Christmas Theme Logic & Performance Optimizations
+ * Final Version: Fixed New Year Celebration State, Static Background (No Float) & Core Logic
  */
 
 import { supabase } from './supabase-client.js';
 import { state } from './state.js';
 import { els, toggleSidebar, showPage, logUserActivity, debounce, showToast } from './utils.js';
 import { loadDashboardData, renderDashboard, setupFileUploads } from './dashboard.js';
-import { loadEventsData } from './events.js'; // IMPORTED EVENTS MODULE
+import { loadEventsData } from './events.js'; 
 
 // --- AUTHENTICATION CHECK & STARTUP ---
 
@@ -38,6 +38,9 @@ const checkAuth = async () => {
     } catch (err) { 
         console.error('CRITICAL: Auth check failed unexpectedly:', err); 
         showToast('System error. Please refresh the page.', 'error');
+        // Emergency loader removal
+        const loader = document.getElementById('app-loading');
+        if(loader) loader.style.display = 'none';
     }
 };
 
@@ -48,15 +51,15 @@ const initializeApp = async () => {
     try {
         console.log('Init: Fetching user profile...');
         
-        // CHRISTMAS: Festive Console Welcome 🎄
-        console.log("%c🎄 Merry Christmas from EcoCampus! 🎅", "color: #ef4444; font-size: 16px; font-weight: bold; background: #ecfdf5; padding: 5px; border-radius: 5px;");
+        // Console Art
+        console.log("%c🎉 Ready for 2026! EcoCampus Loaded. 🌿", "color: #fbbf24; font-size: 16px; font-weight: bold; background: #064e3b; padding: 5px; border-radius: 5px;");
 
-        // PERFORMANCE: Remove snow DOM elements if in Low Data Mode to save memory
+        // PERFORMANCE: Remove heavy DOM elements if in Low Data Mode
         if (document.body.classList.contains('low-data-mode')) {
-            const snowContainer = document.getElementById('snow-container');
-            if (snowContainer) {
-                snowContainer.remove();
-                console.log("❄️ Snowfall disabled for performance.");
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            if (confettiCanvas) {
+                confettiCanvas.remove();
+                console.log("🚀 Low Data Mode: Animations disabled.");
             }
         }
 
@@ -86,7 +89,13 @@ const initializeApp = async () => {
         if (!sessionStorage.getItem('login_logged')) {
             logUserActivity('login', 'User logged in');
             sessionStorage.setItem('login_logged', '1');
-            showToast(`Welcome back, ${userProfile.full_name}!`, 'success');
+            
+            // Check Date for Festive Greeting (Jan 1 - Jan 5)
+            const today = new Date();
+            const isNewYearWeek = today.getMonth() === 0 && today.getDate() <= 5; 
+            const greetingMsg = isNewYearWeek ? `Happy New Year, ${userProfile.full_name}! 🎆` : `Welcome back, ${userProfile.full_name}!`;
+            
+            showToast(greetingMsg, 'success');
         }
 
         // Set initial navigation state
@@ -101,8 +110,10 @@ const initializeApp = async () => {
             }
             renderDashboard();
 
-            // 2. Load Events Data (Background Fetch) - NEW ADDITION
-            // We don't await this to keep dashboard render fast, but it updates the UI when done.
+            // 2. Initialize New Year Hero Banner
+            initNewYearCountdown();
+
+            // 3. Load Events Data (Background Fetch)
             loadEventsData().then(() => {
                 console.log("Init: Events loaded.");
             });
@@ -112,20 +123,25 @@ const initializeApp = async () => {
             showToast('Partial data load failure.', 'warning');
         }
         
-        // Remove app loader after delay for smooth transition
-        setTimeout(() => {
-            const loader = document.getElementById('app-loading');
-            if (loader) loader.classList.add('loaded');
-        }, 500);
-
-        // Initialize Lucide icons
-        if(window.lucide) window.lucide.createIcons();
-        
         setupFileUploads();
 
     } catch (err) { 
         console.error('CRITICAL: App initialization crashed:', err);
         showToast('App failed to initialize.', 'error');
+    } finally {
+        // --- LOADER FAIL-SAFE REMOVAL ---
+        // This runs regardless of errors to ensure user isn't stuck on white screen
+        setTimeout(() => {
+            const loader = document.getElementById('app-loading');
+            if (loader) {
+                loader.classList.add('loaded'); // Try CSS transition
+                // FORCE REMOVE via inline style after short delay
+                setTimeout(() => { loader.style.display = 'none'; }, 300);
+            }
+        }, 500);
+
+        // Initialize Lucide icons
+        if(window.lucide) window.lucide.createIcons();
     }
 };
 
@@ -147,7 +163,7 @@ const handleLogout = async () => {
         redirectToLogin();
     } catch (err) { 
         console.error('Logout: Critical error:', err);
-        redirectToLogin(); // Ensure they are redirected even if logic fails
+        redirectToLogin(); 
     }
 };
 
@@ -171,10 +187,8 @@ export const refreshUserData = async () => {
         
         if (!userProfile) return;
         
-        // Merge strategy: Update specific fields while keeping others (Name, Course, etc.)
         state.currentUser = { ...state.currentUser, ...userProfile };
 
-        // Update UI point displays with animation
         const header = document.getElementById('user-points-header');
         if(header) {
             header.classList.add('points-pulse');
@@ -189,6 +203,172 @@ export const refreshUserData = async () => {
     } catch (err) { 
         console.error('RefreshData: Unexpected error:', err); 
     }
+};
+
+// --- NEW YEAR 2026 HERO BANNER LOGIC ---
+
+let countdownInterval;
+
+const initNewYearCountdown = () => {
+    const container = document.getElementById('new-year-countdown-container');
+    if (!container) return;
+
+    container.classList.remove('hidden');
+    
+    // TARGET: Jan 1, 2026 00:00:00
+    const targetDate = new Date('January 1, 2026 00:00:00').getTime();
+
+    // Clear existing interval if re-initializing
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    // DYNAMIC GREETING UPDATE (Optional)
+    const greetingEl = document.getElementById('user-name-greeting');
+    if (greetingEl) {
+        const now = new Date();
+        if (now.getFullYear() === 2026 && now.getMonth() === 0 && now.getDate() <= 5) {
+             const parent = greetingEl.parentElement; 
+             if(parent) parent.innerHTML = `Happy New Year, <span class="text-brand-600">${state.currentUser.full_name}</span>!`;
+        }
+    }
+
+    const updateTimer = () => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        // --- FIXED STATE CHECK: IS IT 2026? ---
+        if (distance < 0) {
+            // Stop the countdown loop immediately
+            clearInterval(countdownInterval);
+            
+            // Render the Fixed Celebration Banner
+            renderHappyNewYear(container);
+            
+            // Auto-launch confetti only if the transition just happened (within last 10s)
+            // This prevents confetti spam on page refresh unless it's THE moment.
+            if (distance > -10000) {
+                launchConfetti();
+            }
+            return;
+        }
+
+        // --- CALCULATE TIME ---
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // --- RENDER HOLOGRAPHIC COUNTDOWN ---
+        container.innerHTML = `
+            <div class="glass-hero p-6 relative w-full mb-6 group cursor-pointer overflow-hidden transition-all duration-500 hover:scale-[1.01]" onclick="launchConfetti()">
+                
+                <div class="hero-particle w-24 h-24 top-[-20px] right-[-20px] bg-purple-500/20 blur-xl"></div>
+                <div class="hero-particle w-12 h-12 bottom-[10px] left-[10px] bg-blue-400/20 blur-lg delay-700"></div>
+                
+                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    
+                    <div class="text-center md:text-left">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-3 shadow-inner">
+                            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse box-shadow-green"></span>
+                            <span class="text-[10px] font-bold text-gray-100 uppercase tracking-widest">Live Countdown</span>
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-1 tracking-tight">
+                            Time until <span class="text-shimmer font-black">2026</span>
+                        </h2>
+                        <p class="text-sm text-gray-300 font-medium">Let's make this year greener together.</p>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 md:gap-4">
+                        ${renderHeroTimeBox(days, 'DAYS')}
+                        ${renderHeroTimeBox(hours, 'HRS')}
+                        ${renderHeroTimeBox(minutes, 'MINS')}
+                        ${renderHeroTimeBox(seconds, 'SECS', true)}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if(window.lucide) window.lucide.createIcons();
+    };
+
+    // Run once immediately to avoid 1s delay
+    updateTimer(); 
+    
+    // Start interval only if in future
+    const now = new Date().getTime();
+    if (targetDate - now > 0) {
+        countdownInterval = setInterval(updateTimer, 1000);
+    }
+};
+
+const renderHeroTimeBox = (value, label, isAccent = false) => `
+    <div class="flex flex-col items-center justify-center p-3 hero-timer-box min-w-[65px] md:min-w-[75px]">
+        <span class="text-2xl md:text-3xl font-black ${isAccent ? 'text-blue-300' : 'text-white'} tabular-nums font-mono leading-none mb-1">
+            ${String(value).padStart(2, '0')}
+        </span>
+        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">${label}</span>
+    </div>
+`;
+
+// --- FIXED POSITION CELEBRATION CARD (CLEAN & STATIC) ---
+const renderHappyNewYear = (container) => {
+    container.innerHTML = `
+        <div class="glass-hero new-year-fixed min-h-[200px] p-6 
+                    flex flex-col items-center justify-center 
+                    text-center relative overflow-hidden mb-6"
+             onclick="launchConfetti()">
+
+            <div class="absolute inset-0 bg-gradient-to-r 
+                        from-blue-600/20 via-purple-600/20 to-blue-600/20"></div>
+            
+            <h1 class="text-3xl sm:text-4xl md:text-6xl font-black text-shimmer mb-3 relative z-10">
+                HAPPY NEW YEAR!
+            </h1>
+
+            <p class="text-base md:text-lg font-medium text-gray-200 relative z-10 mb-6">
+                Welcome to a greener future. 🌿✨
+            </p>
+
+            <button onclick="launchConfetti(event)"
+                class="relative z-20 px-8 py-3 bg-white text-indigo-900 
+                       font-bold rounded-full text-sm shadow-lg active:scale-95">
+                Celebrate Again 🎉
+            </button>
+        </div>
+    `;
+};
+
+// Global Confetti Trigger
+window.launchConfetti = (e) => {
+    if(e) e.stopPropagation();
+    // Safety check if confetti lib failed to load
+    if (!window.confetti) return;
+
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    // Theme Colors: Blue, Purple, White, Gold
+    const colors = ['#60a5fa', '#a78bfa', '#ffffff', '#fbbf24'];
+
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors
+        });
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
 };
 
 // --- EVENT LISTENERS & UI LOGIC ---
@@ -222,9 +402,6 @@ const themeBtn = document.getElementById('theme-toggle-btn');
 const themeText = document.getElementById('theme-text');
 const themeIcon = document.getElementById('theme-icon');
 
-/**
- * Applies the selected theme (Dark/Light) to the document.
- */
 const applyTheme = (isDark) => {
     try {
         document.documentElement.classList.toggle('dark', isDark);
@@ -243,7 +420,6 @@ if (themeBtn) {
     });
 }
 
-// Load saved theme or default to system preference
 const savedTheme = localStorage.getItem('eco-theme');
 applyTheme(savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches));
 
@@ -267,11 +443,9 @@ if (changePwdForm) {
         btn.textContent = 'Updating...';
 
         try {
-            // Update Supabase Auth user
             const { error } = await supabase.auth.updateUser({ password: newPassword });
             if (error) throw error;
 
-            // Sync with local users table
             const { error: tableError } = await supabase
                 .from('users')
                 .update({ password_plain: newPassword })
@@ -308,7 +482,6 @@ if (redeemForm) {
         btn.innerText = 'Verifying...'; 
 
         try {
-            // Call Database RPC function for coupon redemption
             const { data, error } = await supabase.rpc('redeem_coupon', { p_code: code });
             
             if (error) throw error;
