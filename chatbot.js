@@ -93,13 +93,13 @@ const getSystemPrompt = () => {
     5. **Leaderboard:** Student vs Dept rankings.
 
     **🧠 CORE STUDENT TEAM:**
-    1. **Mohit Mali (Founder/Dev)**
+    1. **Mohit Mali (Founder/Developer/Leader)**
     2. **Amit Rai (Marketing)**
     3. **Darshana Jagtap (PR)**
     4. **Shruti Kadam (HR)**
     5. **Aashish Yadav (Event Head)**
-    6. **Abhishek Gupta (Digital Strategy)**
-    7. **Harshad Lokare (Documentation)**
+    6. **Abhishek Gupta (Creative Head)**
+    7. **Shruti Rasure (Documentation)**
 
     **👤 USER CONTEXT:** User: **${user.full_name}**. Points: **${user.current_points}**.
     
