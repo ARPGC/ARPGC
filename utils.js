@@ -154,8 +154,26 @@ export const formatDate = (dateString, options = {}) => {
 };
 
 export const getIconForHistory = (type) => {
-    const icons = { 'checkin': 'calendar-check', 'event': 'calendar-check', 'challenge': 'award', 'plastic': 'recycle', 'order': 'shopping-cart', 'coupon': 'ticket', 'quiz': 'brain', 'streak_restore': 'zap' };
-    return icons[type] || 'help-circle';
+    // Normalizing type to lower case to handle potential inconsistencies
+    const safeType = (type || '').toLowerCase();
+
+    const icons = { 
+        'checkin': 'calendar-check', 
+        'event': 'calendar-check', 
+        'challenge': 'award', 
+        'plastic': 'recycle', 
+        'order': 'shopping-cart', 
+        'coupon': 'ticket', 
+        'quiz': 'brain', 
+        'streak_restore': 'zap',
+        
+        // --- MOVIE ICONS (Multiple keys to catch any DB value) ---
+        'movie_booking': 'clapperboard',
+        'ticket': 'clapperboard',      // Covers "Ticket"
+        'booking': 'clapperboard',     // Covers "Booking"
+        'movie': 'clapperboard'        // Covers "Movie"
+    };
+    return icons[safeType] || 'help-circle';
 };
 
 export const getIconForChallenge = (type) => {
